@@ -10,22 +10,32 @@ interface D3Link {
   description?: string;
 }
 
+interface GraphConfig {
+  nodeRadius?: number;
+  linkDistance?: number;
+  zoomLevel?: number;
+}
+
 /**
  * Props for the RepositoryGraph component
  */
 interface RepositoryGraphProps {
   nodes: RepositoryNode[];
-  config: GraphConfig;
-  onNodeClick: (node: RepositoryNode) => void;
+  config?: GraphConfig;
+  onNodeClick?: (node: RepositoryNode) => void;
 }
 
 /**
  * RepositoryGraph component for visualizing repository structure
  */
-export const RepositoryGraph = () => {
+export const RepositoryGraph: React.FC<RepositoryGraphProps> = ({ 
+  nodes, 
+  config = {}, 
+  onNodeClick 
+}) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const { repositoryData, setSelectedNode, toggleNodeExpansion, setZoomLevel } = useStore();
-  const { nodes, expandedNodes, zoomLevel } = repositoryData;
+  const { expandedNodes, zoomLevel } = repositoryData;
   const [selectedContent, setSelectedContent] = useState<string | null>(null);
   const [hoveredNode, setHoveredNode] = useState<D3Node | null>(null);
   const [currentLevel, setCurrentLevel] = useState<D3Node | null>(null);
@@ -90,8 +100,8 @@ export const RepositoryGraph = () => {
 
     const width = window.innerWidth * 0.8;
     const height = window.innerHeight * 0.8;
-    const nodeRadius = 8;
-    const linkDistance = 100;
+    const nodeRadius = config.nodeRadius || 8;
+    const linkDistance = config.linkDistance || 100;
 
     // Create SVG container with zoom behavior
     const svg = d3.select(svgRef.current)
@@ -290,91 +300,77 @@ export const RepositoryGraph = () => {
   }, [nodes, expandedNodes, setZoomLevel, currentLevel, handleNodeClick]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-slate-50">
-      <div className={`relative w-[80vw] h-[80vh] transition-all duration-300 ${
-        isExpanding ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
-      }`}>
-        <svg
-          ref={svgRef}
-          className={`w-full h-full rounded-lg shadow-lg transition-colors duration-300 ${
-            currentLevel ? 'bg-slate-800' : 'bg-white'
-          }`}
-        />
-        {selectedContent && (
-          <div className="absolute top-4 right-4 w-1/3 h-1/2 bg-white rounded-lg shadow-lg p-4 overflow-auto">
-            <pre className="text-sm text-slate-700 whitespace-pre-wrap">
-              {selectedContent}
-            </pre>
-            <button
-              className="absolute top-2 right-2 text-slate-500 hover:text-slate-700"
-              onClick={() => setSelectedContent(null)}
-            >
-              ✕
-            </button>
-          </div>
-        )}
-        {hoveredNode && (
-          <div className="absolute bottom-4 left-4 w-1/4 bg-white rounded-lg shadow-lg p-4">
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">{hoveredNode.name}</h3>
-            <div className="space-y-2">
+    <div className="w-full h-full relative">
+      <svg
+        ref={svgRef}
+        className="w-full h-full"
+      />
+      {selectedContent && (
+        <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg max-w-md">
+          <pre className="text-sm">{selectedContent}</pre>
+        </div>
+      )}
+      {hoveredNode && (
+        <div className="absolute bottom-4 left-4 w-1/4 bg-white rounded-lg shadow-lg p-4">
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">{hoveredNode.name}</h3>
+          <div className="space-y-2">
+            <p className="text-sm text-slate-600">
+              <span className="font-medium">Type:</span> {hoveredNode.type}
+            </p>
+            <p className="text-sm text-slate-600">
+              <span className="font-medium">Path:</span> {hoveredNode.path}
+            </p>
+            {hoveredNode.size && (
               <p className="text-sm text-slate-600">
-                <span className="font-medium">Type:</span> {hoveredNode.type}
+                <span className="font-medium">Size:</span> {hoveredNode.size} bytes
               </p>
+            )}
+            {hoveredNode.language && (
               <p className="text-sm text-slate-600">
-                <span className="font-medium">Path:</span> {hoveredNode.path}
+                <span className="font-medium">Language:</span> {hoveredNode.language}
               </p>
-              {hoveredNode.size && (
-                <p className="text-sm text-slate-600">
-                  <span className="font-medium">Size:</span> {hoveredNode.size} bytes
-                </p>
-              )}
-              {hoveredNode.language && (
-                <p className="text-sm text-slate-600">
-                  <span className="font-medium">Language:</span> {hoveredNode.language}
-                </p>
-              )}
-              {hoveredNode.lastModified && (
-                <p className="text-sm text-slate-600">
-                  <span className="font-medium">Last Modified:</span> {hoveredNode.lastModified}
-                </p>
-              )}
-              {hoveredNode.description && (
-                <p className="text-sm text-slate-600">
-                  <span className="font-medium">Description:</span> {hoveredNode.description}
-                </p>
-              )}
-              {hoveredNode.relationships && hoveredNode.relationships.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-sm font-medium text-slate-600 mb-1">Relationships:</p>
-                  <ul className="text-sm text-slate-600 space-y-1">
-                    {hoveredNode.relationships.map((rel, index) => (
-                      <li key={index} className="flex items-center">
-                        <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                          rel.type === 'import' ? 'bg-blue-500' :
-                          rel.type === 'reference' ? 'bg-green-500' :
-                          rel.type === 'dependency' ? 'bg-orange-500' :
-                          'bg-slate-500'
-                        }`} />
-                        {rel.description || rel.type}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+            )}
+            {hoveredNode.lastModified && (
+              <p className="text-sm text-slate-600">
+                <span className="font-medium">Last Modified:</span> {hoveredNode.lastModified}
+              </p>
+            )}
+            {hoveredNode.description && (
+              <p className="text-sm text-slate-600">
+                <span className="font-medium">Description:</span> {hoveredNode.description}
+              </p>
+            )}
+            {hoveredNode.relationships && hoveredNode.relationships.length > 0 && (
+              <div className="mt-2">
+                <p className="text-sm font-medium text-slate-600 mb-1">Relationships:</p>
+                <ul className="text-sm text-slate-600 space-y-1">
+                  {hoveredNode.relationships.map((rel, index) => (
+                    <li key={index} className="flex items-center">
+                      <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                        rel.type === 'import' ? 'bg-blue-500' :
+                        rel.type === 'reference' ? 'bg-green-500' :
+                        rel.type === 'dependency' ? 'bg-orange-500' :
+                        'bg-slate-500'
+                      }`} />
+                      {rel.description || rel.type}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-        )}
-        {currentLevel && (
-          <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-2">
-            <button
-              className="text-sm text-slate-600 hover:text-slate-800 flex items-center"
-              onClick={handleExitNode}
-            >
-              <span className="mr-1">←</span> Back to {currentLevel.parent?.name || 'Root'}
-            </button>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
+      {currentLevel && (
+        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-2">
+          <button
+            className="text-sm text-slate-600 hover:text-slate-800 flex items-center"
+            onClick={handleExitNode}
+          >
+            <span className="mr-1">←</span> Back to {currentLevel.parent?.name || 'Root'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }; 
