@@ -37,9 +37,20 @@ repository-roadmap/
 │   ├── types/         # TypeScript type definitions
 │   ├── App.tsx        # Main application component
 │   └── main.tsx       # Application entry point
+├── docs/              # Vision, roadmap, ADRs, working agreements
 ├── public/            # Static assets
 └── [config files]     # Project configuration files
 ```
+
+## Documentation
+
+Contributors should start with:
+
+- [`docs/VISION.md`](./docs/VISION.md) — what we're building and why ("second brain for codebases").
+- [`docs/ROADMAP.md`](./docs/ROADMAP.md) — phased plan and current milestone.
+- [`docs/PROGRESS.md`](./docs/PROGRESS.md) — "you are here" pointer; read this first every session.
+- [`docs/WORKING_AGREEMENTS.md`](./docs/WORKING_AGREEMENTS.md) — PR rules, commit conventions, ADR process.
+- [`docs/adr/`](./docs/adr/) — Architecture Decision Records.
 
 ## Getting Started
 
