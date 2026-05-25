@@ -1,50 +1,45 @@
 ---
 id: ADR-0005
-title: LLM provider and caching
-status: Proposed
+title: LLM provider abstraction and caching
+status: Accepted
 date: 2026-05-23
 deciders: jihao
 expand-on: phase-C-open
 ---
 
-# ADR-0005 — LLM provider and caching
+# ADR-0005 — LLM provider abstraction and caching
 
-> **Status: Proposed.** This ADR is a stub. The provider choice is parked as an open question in [`PROGRESS.md`](../PROGRESS.md). The full design — provider selection, cost ceiling, prompt versioning conventions — will be expanded when Phase C opens. We are landing a stub now to reserve the ADR number and to commit to the cache shape, which informs [ADR-0007](./0007-persistence.md).
+> Partially accepted: the *abstraction shape* and *caching strategy* are decided. The *initial provider list* and *cost ceiling* still settle at Phase C open after empirical cost measurement (see Phase C.0 in [ROADMAP.md](../ROADMAP.md)).
 
 ## Context
 
-Phase C introduces semantic enrichment: per-file and per-directory summaries, architectural-layer inference (entry / route / service / data / ui / util / test), and per-node descriptions in the UI. All of these require LLM calls.
+Phase C introduces semantic enrichment: per-file summaries, per-directory roll-ups, architectural-layer inference. All require LLM calls.
 
-Three concerns:
+User-stated requirement (PROGRESS Q1): **multi-provider, user-switchable, no single default.** Different users have different priorities (cost, privacy, cloud-vs-local). Locking in one provider would force-fit all of them.
 
-1. **Provider lock-in.** Hard-coding one provider makes swapping costly. Different users will want different providers (cost, privacy, local-vs-cloud).
-2. **Cost.** A 1000-file repo at one summary per file plus aggregations is real money if uncached.
-3. **Determinism.** A summary should be stable across reloads as long as the file content hasn't changed.
+Cost is unknown without empirical data (PROGRESS Q3): real-world cost on a large OSS repo across providers and models hasn't been measured. Cost ceiling decision is deferred until Phase C.0 (a measurement spike) produces numbers.
 
-## Decision (provisional)
+## Decision
 
-- **Adapter interface.** `Summarizer` (see [ARCHITECTURE.md](../ARCHITECTURE.md)). Implementations live in `src/adapters/summarizer/<provider>.ts`. Default provider: **TBD** — parked open question.
-- **Cache key.** `summary:<schema-version>:<provider>:<model>:<prompt-version>:<file-SHA>`. Any one of those changing produces a cache miss; identical-content + same prompt + same model = guaranteed cache hit.
-- **Prompt versioning.** Each prompt template carries a semver-like version. Bumping it forces re-summarization for the affected resource type.
+- **Provider registry.** A `Summarizer` interface (see [ARCHITECTURE.md](../ARCHITECTURE.md)). Multiple implementations live in `src/adapters/summarizer/<provider>.ts`. The app ships with a registry of supported providers and a settings UI that lets the user pick.
+- **Supported providers at v1 (planned set; final list at C.1):** Anthropic (Claude), OpenAI (GPT), local-via-Ollama for the zero-cost path. Adding more is one file plus a registry entry.
+- **No default provider.** First-run UX prompts the user to pick a provider and supply credentials (stored in `localStorage`, never bundled — same model as [ADR-0003](./0003-token-handling.md)).
+- **Cache key.** `summary:<schema-version>:<provider>:<model>:<prompt-version>:<file-SHA>`. Any element changing produces a cache miss. Identical inputs guarantee a hit.
+- **Prompt versioning.** Each prompt template carries a semver-like version. Bumping it forces re-summarization.
 - **Storage.** Summaries persist in IndexedDB via the `Persistence` adapter ([ADR-0007](./0007-persistence.md)).
-- **Cost ceiling.** Enforced at adapter level: configurable max-tokens-per-session, max-calls-per-session, with a visible counter in the UI. Hard cap also parked as an open question.
-- **Privacy.** PAT and file content never leave the configured provider endpoint. No analytics.
+- **Cost telemetry.** Each call's token count + provider-reported cost (when available) is recorded; a session-level counter is visible in the UI. Hard cost ceiling is a per-user setting; default value decided at C.0.
+- **Privacy.** File content and credentials never leave the provider endpoint the user chose. No third-party analytics.
 
 ## Consequences
 
-- Swapping providers is a config change, not a refactor.
-- Re-opening a repo whose files haven't changed is free.
-- Bumping a prompt forces a paid recompute. That's intentional — prompt changes are the unit of "the summary semantics changed."
+- Switching providers is a settings change, not a code change.
+- Users who care about zero cost can run Ollama locally; users who care about quality can pick a frontier model and pay.
+- Cache survives provider/model switches without invalidating other providers' results — the provider/model is part of the key.
+- C.0 (cost-measurement spike) must run before C.1 (adapter implementation) so the default cost ceiling reflects reality.
+- Adding a new provider in the future is mechanical.
 
-## Alternatives considered (sketches; revisit at phase open)
+## Alternatives considered
 
-- **Single-provider hard-coded** — simpler short-term, painful long-term.
-- **Provider-agnostic via Vercel AI SDK or LangChain.js** — eliminates the adapter we'd write, but adopts their abstractions and dependencies. Reasonable.
-- **Local-only via Ollama** — viable for privacy-conscious users, but no zero-config story.
-
-## To be decided before Accepted
-
-- Default provider.
-- Cost ceiling default value.
-- Whether to bundle the Vercel AI SDK vs. roll our own adapter.
-- Prompt-version cadence (per-release? per-prompt?).
+- **Single-provider hard-coded** — simpler short-term, contradicts user-stated multi-provider requirement.
+- **Vercel AI SDK** — would eliminate per-provider adapter boilerplate; revisit at C.1 once the interface is concrete. Trade-off: adopts their abstractions and bundle weight.
+- **Backend proxy with provider routing** — solves the credential-in-browser surface for centrally-hosted deploys; rejected for v1 because we have no backend ([ADR-0003](./0003-token-handling.md)).
