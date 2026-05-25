@@ -28,15 +28,20 @@ Open and merge the PR for **A.0 — Planning foundation** (this branch: `docs/pl
 
 ## Open questions
 
-These are decisions the project owner needs to make. They are **not blocking A.1** but each must be resolved before its referenced milestone.
+Most originally-parked questions have been resolved. The table below shows current state.
 
-| # | Question | Blocks | Notes |
+| # | Question | Status | Resolution |
 |---|---|---|---|
-| Q1 | LLM provider — Anthropic / OpenAI / Ollama / pluggable-with-default? | ADR-0005 finalization → Phase C.1 | Affects cost ceiling and whether keys live in browser only. |
-| Q2 | Deploy target — local-only for v1, or public deploy from day 1? | ADR-0003 emphasis → Phase G.4 | Affects whether `localStorage` PAT is primary or secondary mode. |
-| Q3 | LLM cost ceiling per repo — hard cap value? | ADR-0005 finalization → Phase C.2 | Drives whether C.2 ships a tiered summarization strategy. |
-| Q4 | Do `.canvas` files persist edge labels in their JSON? Does Obsidian's Graph view ingest `.canvas` content? | ADR-0006 promotion to Accepted → Phase F.1 | Verifiable in a 30-min hand-built test vault (see [research/obsidian-feasibility.md § Open verifications](./research/obsidian-feasibility.md)). Scheduled for F.0. |
-| Q5 | Public deploy target (Vercel / Cloudflare Pages / GitHub Pages / Netlify / self-host)? | Phase G.4 | Tied to Q2. |
+| Q1 | LLM provider — Anthropic / OpenAI / Ollama / pluggable? | ✅ **Resolved 2026-05-23** | Multi-provider with first-run picker; initial set Anthropic + OpenAI + Ollama. See [ADR-0005](./adr/0005-llm-provider-and-caching.md). |
+| Q2 | CI/CD platform — GitHub Actions vs. alternatives? | ✅ **Resolved 2026-05-23** | GitHub Actions (CI). See [ADR-0008](./adr/0008-ci-cd-pipeline.md). Implementation in A.7. |
+| Q3 | LLM cost ceiling per repo — hard cap value? | ⏸️ **Deferred to C.0** | Empirically measured in Phase C.0 spike before any LLM code ships. Default ceiling falls out of that memo. |
+| Q4 | JSON Canvas edge labels + Graph-view ingestion of `.canvas` | ✅ **Resolved 2026-05-23** | Edge labels persist (verified in v1.0 spec). Graph view ingests only `[[wikilinks]]`, not `.canvas`. See [research/obsidian-format-deep-dive.md](./research/obsidian-format-deep-dive.md) and [ADR-0006](./adr/0006-obsidian-export-format.md) (now Accepted). |
+| Q5 | Public deploy host? | ✅ **Resolved 2026-05-23** | Cloudflare Pages (CD). See [ADR-0008](./adr/0008-ci-cd-pipeline.md). Implementation in G.4. Portfolio-integration style (link / iframe / subdomain) picked in G.5. |
+
+Two small Obsidian items remain open but are minor finalization tasks for Phase F.0, not blockers:
+
+- **Naming-collision policy** for files with the same basename in different folders (Obsidian wikilinks resolve by basename). Decide at F.0.
+- **`.canvas` scale limit** — empirically test rendering for a synthetic 5k-node `.canvas`. May inform a "summarize at directory level for >N files" fallback.
 
 ## Known broken / deferred
 
@@ -47,11 +52,11 @@ These are decisions the project owner needs to make. They are **not blocking A.1
 | Non-JS/TS language parsers (Python, Go, etc.) | Deferred to v2 | Out of scope per [ROADMAP § v1 out-of-scope](./ROADMAP.md#explicit-v1-out-of-scope) |
 | Multi-repo cross-graphs | Deferred to v2 | Out of scope |
 | Real-time collaboration | Deferred to v2 | Out of scope |
-| Backend proxy | Deferred to post-v1 | Re-evaluate when public deploy decision (Q2) is made |
+| Backend proxy | Deferred to post-v1 | Re-evaluate if Cloudflare Pages free tier becomes limiting; would also enable centrally-managed LLM credentials |
 
 ## How this file gets updated
 
 - When a milestone PR lands, the PR's final commit updates this file: move the milestone into "Recently completed," update "You are here," update "Next action."
 - When a session encounters a blocker, add it to "Open questions" rather than guessing.
-- When a decision is made that resolves an open question, remove the row from this file and capture the decision in an ADR.
+- When a decision is made that resolves an open question, mark it Resolved in the table with a date and a link to the ADR or memo that records the decision.
 - Keep this file ≤80 lines. If it grows, move historical items into a `docs/CHANGELOG.md` (not yet needed).
