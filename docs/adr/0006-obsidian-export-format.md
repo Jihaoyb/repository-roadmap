@@ -1,22 +1,21 @@
 ---
 id: ADR-0006
 title: Obsidian export format
-status: Proposed
+status: Accepted
 date: 2026-05-23
 deciders: jihao
-informed-by: ../research/obsidian-feasibility.md
-expand-on: phase-F-open
+informed-by: ../research/obsidian-feasibility.md, ../research/obsidian-format-deep-dive.md
 ---
 
 # ADR-0006 — Obsidian export format
 
-> **Status: Proposed.** This ADR is a stub. The full design will be expanded when Phase F opens, after the three open verifications in [`research/obsidian-feasibility.md`](../research/obsidian-feasibility.md) are settled. We are landing a stub now to reserve the ADR number and to commit to the broad shape of the export.
-
 ## Context
 
-Phase F ships the export-to-Obsidian feature that distinguishes Repository Roadmap from every other repo visualizer. The feasibility memo concluded the export is doable with one verification needed (do `.canvas` files persist edge labels in their JSON?) and one ambiguity (does Obsidian's Graph view ingest `.canvas` content or only `[[wikilinks]]`?).
+Phase F ships the export-to-Obsidian feature that distinguishes Repository Roadmap from every other repo visualizer. The deep-dive memo [`research/obsidian-format-deep-dive.md`](../research/obsidian-format-deep-dive.md) evaluates three options (wikilinks-only, Canvas-only, both) and recommends both. The earlier `Proposed` version of this ADR is superseded by this `Accepted` version now that the underlying open verifications are resolved.
 
-## Decision (provisional)
+## Decision
+
+**Hybrid export — Option C in the deep-dive memo.**
 
 - **Vault layout.** A user-named root folder containing:
   - Subfolders mirroring the source repo's directory structure.
@@ -27,24 +26,35 @@ Phase F ships the export-to-Obsidian feature that distinguishes Repository Roadm
 
 - **Per-note frontmatter (YAML).** Includes at minimum: `path`, `sha`, `language`, `layer` (entry/route/service/etc.), `size`, `last-modified`, `summary-version`. Forward-compatible with future Dataview queries without depending on Dataview.
 
-- **Edges.** `[[wikilinks]]` between `.md` notes for every import / reference / parent-child relationship. Wikilinks render in Obsidian Graph view; that's the safe, plugin-free visualization channel.
+- **Edges.** `[[wikilinks]]` between `.md` notes for every import / reference / parent-child relationship. Wikilinks render in Obsidian's native Graph view.
 
-- **Visual graph.** A single `repo.canvas` per snapshot. Conforms to [jsoncanvas.org v1.0](https://jsoncanvas.org/) literally — no proprietary extensions. Node positions match the user's last-saved layout in the app. Colors encode architectural layer.
+- **Visual graph.** A single `repo.canvas` per snapshot. Conforms to [jsoncanvas.org v1.0](https://jsoncanvas.org/spec/1.0/) literally — no proprietary extensions. Node positions match the user's last-saved layout in the app. Colors encode architectural layer. Edge labels (verified to persist in spec) carry the relationship type ("imports", "references").
 
-- **No Dataview dependency.** Vault must render usefully without any plugins installed. Dataview is a suggestion, not a requirement.
+- **No Dataview / plugin dependency.** Vault must render usefully without any plugins installed. Plugins suggested in vault `README.md` as enhancements.
 
-- **Round-trip.** v1 is export-only. Re-import is a post-v1 concern; the feasibility memo flags it as lossy.
+- **Round-trip.** v1 is export-only. Re-import is post-v1 (flagged lossy in feasibility memo).
 
 ## Consequences
 
-- A user with no plugins gets a navigable vault with wikilink graph view and a parallel `.canvas` view.
-- A user with Dataview can build their own queries over our frontmatter.
-- Re-running the export overwrites notes that the user may have edited. The post-v1 round-trip ADR has to address merge/conflict.
-- Adds `Exporter` adapter to the codebase ([ARCHITECTURE.md](../ARCHITECTURE.md)).
+- Plugin-free user gets: wikilink-driven Graph view + a navigable `.canvas` snapshot + queryable frontmatter.
+- Dataview-enabled user can build custom queries over our frontmatter.
+- Each export overwrites prior notes — user hand-edits are lost. Post-v1 round-trip ADR must address merge.
+- Adds the `Exporter` adapter ([ARCHITECTURE.md](../ARCHITECTURE.md)) implementing the `'obsidian-vault'` export target.
+- Some edge information is duplicated between `.md` wikilinks and `.canvas` edges; our exporter is the single writer so duplication doesn't drift in practice.
 
-## To be decided before Accepted
+## Verifications resolved (2026-05-23)
 
-- Do `.canvas` files persist edge labels in their JSON? (Verify with a 5-node test vault.)
-- Does Obsidian Graph view ingest `.canvas`? (Same test vault.)
-- Naming collision policy when two files in different folders share a name (Obsidian wikilinks resolve by basename by default).
-- Whether export is "snapshot" (single timestamped folder) or "in-place update" (overwrites the previous export).
+- ✅ Edge labels persist in `.canvas` JSON (spec confirms `label: string` on edges).
+- ✅ Graph view does not ingest `.canvas` natively (Option C is the right choice).
+
+## Minor finalization tasks for Phase F.0
+
+- Choose naming-collision policy for files with the same basename in different folders (Obsidian wikilinks resolve by basename by default). Options: path-prefix in link text, fully-qualified path as note title, alias trick. Decide at F.0; no architectural impact.
+- Empirically test `.canvas` rendering for a synthetic 5k-node export to find Obsidian's practical scale limit. May inform a "summarize at directory level for >N files" fallback.
+
+## Alternatives considered
+
+- **Wikilinks only** — discards spatial layout.
+- **Canvas only** — discards Graph view and frontmatter queryability.
+
+See [deep-dive memo](../research/obsidian-format-deep-dive.md) for full reasoning.

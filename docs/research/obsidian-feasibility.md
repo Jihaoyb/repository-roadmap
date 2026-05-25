@@ -56,7 +56,7 @@ Two arrays: `nodes` and `edges`.
 
 **Edges:** directional. Attributes documented: `fromNode`, `fromSide`, `toNode`, `toSide`, `color`.
 
-**Edge labels:** *unverified.* The spec does not clearly document a `label` field on edges in the v1.0 schema we surveyed. Obsidian's own Canvas UI does support edge labels — we don't yet know if those persist in the `.canvas` JSON or if they're UI-only.
+**Edge labels:** ✅ **Verified.** The [v1.0 spec](https://jsoncanvas.org/spec/1.0/) defines `label` as an optional string property on every edge. Persists in JSON, round-trips cleanly. (Was previously flagged unverified; resolved 2026-05-23 via direct spec fetch.)
 
 Sources: [Obsidian blog — JSON Canvas announcement](https://obsidian.md/blog/json-canvas/), [jsoncanvas.org spec](https://jsoncanvas.org/).
 
@@ -66,7 +66,7 @@ Sources: [Obsidian blog — JSON Canvas announcement](https://obsidian.md/blog/j
 
 Obsidian's Graph view is driven primarily by `[[wikilinks]]` between markdown files. Each note is a node, each link is an edge. Frontmatter `tags` participate (graph can color by tag). Custom frontmatter properties can be mapped to colors via Graph view settings.
 
-Whether Graph view ingests `.canvas` file content (i.e., shows Canvas-defined nodes/edges) is *unverified*. Best evidence is that Graph view is wikilink-centric and Canvas is a separate visualization mode.
+✅ **Verified.** Native Graph view does NOT ingest `.canvas` content; it operates only on `[[wikilinks]]` between `.md` files. Community plugins such as [Advanced Canvas](https://github.com/Developer-Mike/obsidian-advanced-canvas) and [Canvas Links](https://www.obsidianstats.com/plugins/canvas-links) bridge them, but we will not depend on plugins. Resolved 2026-05-23 via WebSearch + Obsidian forum thread [Canvas: display on a graph view](https://forum.obsidian.md/t/canvas-display-on-a-graph-view/68648) (still a feature request as of 2026).
 
 Source: search-derived from Obsidian community docs and third-party writeups; primary docs at [Obsidian Help — Graph view](https://help.obsidian.md/Plugins/Graph+view).
 
@@ -99,18 +99,26 @@ GitHub search for "repo to obsidian", "codebase obsidian vault", "github obsidia
 
 - ✅ Vault format: trivially compatible (folder of `.md`)
 - ✅ Wikilinks: full support for our edge types
-- ✅ Canvas: covers our graph rendering, modulo edge labels
+- ✅ Canvas: covers our graph rendering; edge labels verified
 - ✅ Frontmatter: covers all our per-file metadata (path, sha, language, layer, churn, last-modified)
-- ⚠️ Edge labels in `.canvas`: needs verification before Phase F
-- ⚠️ Canvas in Graph view: assume parallel, not unified, until verified
+- ✅ Edge labels in `.canvas`: verified in v1.0 spec
+- ✅ Canvas in Graph view: confirmed parallel, not unified; native Graph view ignores `.canvas`
 - ✅ Dataview: not required; can suggest
+
+For the export-format decision and the example walkthrough, see [obsidian-format-deep-dive.md](./obsidian-format-deep-dive.md).
 
 **Round-trip (Obsidian → app):** Lossy in v1. Position edits in the `.canvas` would be importable, but if the user edits frontmatter or wikilinks we'd need a diff/merge story that we're not ready to design. Defer to post-v1.
 
-## Open verifications (track in PROGRESS.md)
+## Open verifications
 
-1. Do `.canvas` files persist edge labels in their JSON, or are labels UI-only? Verify by manually adding a label in Obsidian Canvas, saving, then `cat`-ing the file.
-2. Does Obsidian Graph view ingest `.canvas` content, or only `[[wikilinks]]` between `.md` files? Verify with a 5-node test vault containing only a `.canvas` and observe Graph view behavior.
-3. What's the largest practical `.canvas` size before Obsidian's renderer chokes? (Relevant for monorepos.) No real source; needs empirical test.
+Resolved 2026-05-23:
 
-These three verifications should be done in a 30-minute hand-built test vault before [ADR-0006](../adr/0006-obsidian-export-format.md) leaves `Proposed` status.
+1. ✅ Edge labels persist in `.canvas` JSON — confirmed via [v1.0 spec](https://jsoncanvas.org/spec/1.0/).
+2. ✅ Graph view does not ingest `.canvas` natively — confirmed via 2026 community plugins (Advanced Canvas, Canvas Links) existing specifically to bridge this gap.
+
+Still open, deferred to Phase F.0 hand-test:
+
+3. What's the largest practical `.canvas` size before Obsidian's renderer chokes? (Relevant for monorepos.) No public source; needs empirical test on a synthetic 5k-node `.canvas`.
+4. Naming-collision policy when two files in different folders share a basename — Obsidian wikilinks resolve by basename by default. Needs a tie-breaker decision (path-prefix in the link, custom alias, etc.).
+
+These remaining items do not block ADR-0006 from being Accepted (the structural decisions are settled); they are minor finalization tasks for Phase F.0.
