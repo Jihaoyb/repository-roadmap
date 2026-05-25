@@ -101,7 +101,7 @@ Interim fix only — the proper replacement is [ADR-0002](./adr/0002-ast-parser-
 - `feat: token-source UI panel with rate-limit headroom`
 - `docs: document both token modes in README and .env.example`
 
-#### A.7 — Phase A close-out
+#### A.7 — Phase A close-out *(implements [ADR-0008](./adr/0008-ci-cd-pipeline.md) CI half)*
 
 - `ci: add GitHub Actions workflow (lint + type-check + build + test)`
 - `docs: update PROGRESS — Phase A complete, Phase B.1 is next`
@@ -139,7 +139,8 @@ Interim fix only — the proper replacement is [ADR-0002](./adr/0002-ast-parser-
 
 ### Milestones
 
-- **C.1 — Summarizer adapter.** Implement [ADR-0005](./adr/0005-llm-provider-and-caching.md); SHA-keyed cache; default provider chosen.
+- **C.0 — Cost-measurement spike** *(resolves PROGRESS Q3)*. Time-boxed (~1 day) empirical run: pick 3 representative public repos at small/medium/large scales (≈50 / 500 / 5000 files); summarize each with 3 providers × 2 models each, including Ollama for the free path; record token counts, wall-clock times, and per-provider costs. Output: a `docs/research/llm-cost-spike.md` memo with a table, plus a recommended default cost ceiling that feeds C.1. **Gate: no LLM code lands in `master` before C.0 closes.**
+- **C.1 — Summarizer adapter and provider registry.** Implement [ADR-0005](./adr/0005-llm-provider-and-caching.md); ship initial provider set (Anthropic, OpenAI, Ollama); first-run picker UX; SHA-keyed cache; default cost ceiling from C.0.
 - **C.2 — Per-file summary on demand.** Click a file → see its summary; bulk-summarize toggle for whole repo with cost preview.
 - **C.3 — Per-directory summary.** Roll up file summaries; cache per-dir at the directory's tree SHA.
 - **C.4 — Architectural-layer inference.** Heuristic + LLM fallback; tag every node; color-code in graph.
@@ -211,7 +212,7 @@ Interim fix only — the proper replacement is [ADR-0002](./adr/0002-ast-parser-
 - **G.1 — Syntax highlighting** in file preview (Shiki).
 - **G.2 — Deep links** to editor (`vscode://`, `cursor://`) and GitHub permalinks.
 - **G.3 — Recent repos list** (localStorage).
-- **G.4 — Public deploy** (target: TBD; parked open question in PROGRESS).
+- **G.4 — Public deploy** *(implements [ADR-0008](./adr/0008-ci-cd-pipeline.md) CD half)*. Connect repo to Cloudflare Pages; configure SPA `_redirects`; verify preview-deploy per PR; pick portfolio-integration style (link / iframe / subdomain).
 - **G.5 — Share-UX pass.** Open-graph cards, "Try this repo" demo links, README screencast.
 
 ---
