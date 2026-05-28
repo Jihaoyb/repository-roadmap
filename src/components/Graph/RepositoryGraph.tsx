@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
-import type { RepositoryNode, D3Node } from '../../types';
+import type { D3Node } from '../../types';
 import { useStore } from '../../store';
 
 interface D3Link {
@@ -11,26 +11,17 @@ interface D3Link {
 }
 
 /**
- * Props for the RepositoryGraph component
- */
-interface RepositoryGraphProps {
-  nodes: RepositoryNode[];
-  config: GraphConfig;
-  onNodeClick: (node: RepositoryNode) => void;
-}
-
-/**
  * RepositoryGraph component for visualizing repository structure
  */
 export const RepositoryGraph = () => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const { repositoryData, setSelectedNode, toggleNodeExpansion, setZoomLevel } = useStore();
-  const { nodes, expandedNodes, zoomLevel } = repositoryData;
+  const { repositoryData, setZoomLevel } = useStore();
+  const { nodes, expandedNodes } = repositoryData;
   const [selectedContent, setSelectedContent] = useState<string | null>(null);
   const [hoveredNode, setHoveredNode] = useState<D3Node | null>(null);
   const [currentLevel, setCurrentLevel] = useState<D3Node | null>(null);
   const [isExpanding, setIsExpanding] = useState(false);
-  const [clickedNode, setClickedNode] = useState<D3Node | null>(null);
+  const [, setClickedNode] = useState<D3Node | null>(null);
 
   // Handle ESC key press
   useEffect(() => {
@@ -62,8 +53,8 @@ export const RepositoryGraph = () => {
       setClickedNode(node);
       // First shrink the clicked node
       const clickedElement = d3.select(svgRef.current)
-        .selectAll('circle')
-        .filter((d: any) => d.id === node.id);
+        .selectAll<SVGCircleElement, D3Node>('circle')
+        .filter((d) => d.id === node.id);
       
       clickedElement
         .transition()
@@ -153,7 +144,7 @@ export const RepositoryGraph = () => {
 
     // Create force simulation
     const simulation = d3.forceSimulation(d3Nodes)
-      .force('link', d3.forceLink(links).id((d: any) => d.id).distance(linkDistance))
+      .force('link', d3.forceLink<D3Node, D3Link>(links).id((d) => d.id).distance(linkDistance))
       .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide().radius(nodeRadius * 2));

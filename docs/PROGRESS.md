@@ -2,7 +2,7 @@
 title: Progress
 status: living
 audience: all
-updated: 2026-05-23
+updated: 2026-05-28
 read-first: true
 ---
 
@@ -13,18 +13,19 @@ read-first: true
 ## You are here
 
 - **Current phase:** A — Stop the bleeding
-- **Current milestone:** A.0 — Planning foundation *(in flight as the PR containing this file)*
-- **Next milestone after A.0 lands:** A.1 — Project hygiene
+- **Current milestone:** A.2 — RepositoryGraph wiring
+- **Next milestone after A.2 lands:** A.3 — URL and content correctness
 
 ## Recently completed
 
 | Milestone | PR | Landed |
 |---|---|---|
-| *(none yet — A.0 is the first)* | | |
+| A.1 — Project hygiene | [#3](https://github.com/Jihaoyb/repository-roadmap/pull/3) | 2026-05-28 |
+| A.0 — Planning foundation | [#2](https://github.com/Jihaoyb/repository-roadmap/pull/2) | 2026-05-25 |
 
 ## Next action
 
-Open and merge the PR for **A.0 — Planning foundation** (this branch: `docs/planning-foundation` → `master`). After merge, the next session opens A.1 by reading [ROADMAP.md § Phase A.1](./ROADMAP.md#a1--project-hygiene) and beginning with the first commit in that milestone (`chore: delete src/types/test.ts`).
+**A.2 — RepositoryGraph wiring** is next — see [ROADMAP.md § Phase A.2](./ROADMAP.md#a2--repositorygraph-wiring). Note: A.1's build green-up already removed the dead props plumbing and the stale `RepositoryGraphProps` interface (resolving bug 2 and making `RepositoryGraph` store-driven), so A.2 should be re-scoped to the remaining wiring — feed `graphConfig` from the store (graph dimensions are hardcoded today), set the selected node on file-node click (bug 9), and fix the breadcrumb parent name (bug 3).
 
 ## Open questions
 

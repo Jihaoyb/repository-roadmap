@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import type { RepositoryNode } from './types';
 import { useStore } from './store';
 import { RepositoryGraph } from './components/Graph/RepositoryGraph';
 
@@ -9,11 +8,8 @@ import { RepositoryGraph } from './components/Graph/RepositoryGraph';
 function App() {
   const [inputUrl, setInputUrl] = useState('');
   const {
-    repositoryUrl,
     repositoryData,
-    graphConfig,
     setRepositoryUrl,
-    setSelectedNode,
     fetchRepositoryData,
   } = useStore();
 
@@ -26,13 +22,6 @@ function App() {
       setRepositoryUrl(inputUrl);
       fetchRepositoryData(inputUrl);
     }
-  };
-
-  /**
-   * Handle node click in the graph
-   */
-  const handleNodeClick = (node: RepositoryNode) => {
-    setSelectedNode(node);
   };
 
   return (
@@ -103,11 +92,7 @@ function App() {
         {!repositoryData.loading && repositoryData.nodes.length > 0 && (
           <div className="bg-white shadow sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <RepositoryGraph
-                nodes={repositoryData.nodes}
-                config={graphConfig}
-                onNodeClick={handleNodeClick}
-              />
+              <RepositoryGraph />
             </div>
           </div>
         )}

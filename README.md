@@ -1,54 +1,56 @@
 # Repository Roadmap
 
-A powerful visualization tool for exploring and understanding repository structures. Built with React, TypeScript, and D3.js, this application provides an interactive graph-based interface to navigate through repository contents, analyze file relationships, and understand code dependencies.
+An interactive visualizer for a GitHub repository's file structure. Paste a repo URL
+and explore it as a D3 force-directed graph — directories and files as nodes, with
+import and Markdown-link relationships drawn as edges.
+
+This is an early-stage project under active, milestone-based development. For the
+vision and the phased plan, see [Documentation](#documentation).
 
 ## Features
 
-- Interactive repository structure visualization
-- Real-time file content preview
-- Dynamic node expansion and collapse
-- Relationship analysis between files
-- Smart dependency detection
-- Modern, responsive UI with smooth animations
-- GitHub API integration with authentication
+- **Force-directed structure graph** of a GitHub repo (D3), with pan, zoom, and drag.
+- **Drill-down navigation** — click a directory node to expand into it; press `Esc` to step back out.
+- **File preview** — click a file node to view its fetched contents in an overlay panel.
+- **Relationship edges** — detects `import` statements (JS/TS/JSX/TSX) and Markdown links
+  and draws them as colored edges (regex-based for now; full AST resolution is planned —
+  see [ADR-0002](./docs/adr/0002-ast-parser-for-imports.md)).
+- **Node details on hover** — path, size, language, and relationships.
+- **GitHub API integration** via Octokit, with optional token auth to raise rate limits.
 
 ## Tech Stack
 
-- **Frontend Framework**: React + TypeScript
-- **Build Tool**: Vite
-- **State Management**: Zustand
-- **Data Visualization**: D3.js
-- **Styling**: Tailwind CSS
-- **API Integration**: Octokit
-- **Development Tools**: 
-  - ESLint for code quality
-  - SWC for fast refresh
-  - TypeScript for type safety
+- **UI:** React 19 + TypeScript
+- **Build:** Vite 6 (`@vitejs/plugin-react`)
+- **State:** Zustand
+- **Visualization:** D3 v7 (custom SVG force simulation)
+- **Styling:** Tailwind CSS v4 (via `@tailwindcss/postcss`)
+- **GitHub API:** Octokit (`@octokit/rest`)
+- **Quality:** ESLint (type-aware) + `tsc` strict mode
 
 ## Project Structure
 
 ```
 repository-roadmap/
 ├── src/
-│   ├── components/     # React components
-│   │   └── Graph/     # Graph visualization components
-│   ├── services/      # API and external service integrations
-│   ├── store/         # State management
-│   ├── types/         # TypeScript type definitions
-│   ├── App.tsx        # Main application component
-│   └── main.tsx       # Application entry point
-├── docs/              # Vision, roadmap, ADRs, working agreements
-├── public/            # Static assets
-└── [config files]     # Project configuration files
+│   ├── components/Graph/   # RepositoryGraph — the D3 visualization
+│   ├── services/           # github.ts — GitHub API + relationship analysis
+│   ├── store/              # Zustand store
+│   ├── types/              # shared TypeScript types
+│   ├── App.tsx             # app shell (URL input, states, layout)
+│   └── main.tsx            # entry point
+├── docs/                   # vision, roadmap, progress, ADRs, working agreements
+└── public/                 # static assets
 ```
 
 ## Documentation
 
-Contributors should start with:
+Start here — especially before contributing:
 
-- [`docs/VISION.md`](./docs/VISION.md) — what we're building and why ("second brain for codebases").
-- [`docs/ROADMAP.md`](./docs/ROADMAP.md) — phased plan and current milestone.
-- [`docs/PROGRESS.md`](./docs/PROGRESS.md) — "you are here" pointer; read this first every session.
+- [`docs/PROGRESS.md`](./docs/PROGRESS.md) — "you are here"; read this first every session.
+- [`docs/ROADMAP.md`](./docs/ROADMAP.md) — the phased plan and current milestone.
+- [`docs/VISION.md`](./docs/VISION.md) — what we're building and why.
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — system overview.
 - [`docs/WORKING_AGREEMENTS.md`](./docs/WORKING_AGREEMENTS.md) — PR rules, commit conventions, ADR process.
 - [`docs/adr/`](./docs/adr/) — Architecture Decision Records.
 
@@ -56,81 +58,74 @@ Contributors should start with:
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- npm or yarn
-- GitHub account (for API access)
+- Node.js 20+ (Vite 6)
+- npm
 
 ### Installation
 
-1. Clone the repository:
+1. Clone and install:
    ```bash
-   git clone https://github.com/yourusername/repository-roadmap.git
+   git clone https://github.com/Jihaoyb/repository-roadmap.git
    cd repository-roadmap
-   ```
-
-2. Install dependencies:
-   ```bash
    npm install
-   # or
-   yarn install
    ```
 
-3. Create a `.env` file in the root directory:
-   ```env
-   VITE_GITHUB_TOKEN=your_github_token
+2. (Optional) Configure a GitHub token. Without one, requests are anonymous and capped
+   at ~60/hr; a token raises this to 5,000/hr.
+   ```bash
+   cp .env.example .env
+   # then set VITE_GITHUB_TOKEN in .env
    ```
+   `VITE_GITHUB_TOKEN` is a **dev-only** fallback that Vite inlines at build time — keep
+   it out of public deploy builds. A localStorage-based token (set in the UI) becomes the
+   primary mechanism in a later milestone. See [ADR-0003](./docs/adr/0003-token-handling.md).
 
-4. Start the development server:
+3. Start the dev server:
    ```bash
    npm run dev
-   # or
-   yarn dev
    ```
 
 ## Usage
 
-1. Enter a GitHub repository URL in the input field
-2. The application will fetch and visualize the repository structure
-3. Interact with the graph:
-   - Hover over nodes to see details
-   - Click nodes to expand directories
-   - Drag nodes to rearrange the layout
-   - Use mouse wheel to zoom in/out
-   - Click and drag to pan the view
+1. Enter a GitHub repository URL (e.g. `https://github.com/facebook/react`) and click **Visualize**.
+2. The app fetches the repository and renders its structure as a graph.
+3. Interact:
+   - **Hover** a node for details.
+   - **Click a directory** to drill into it; press **`Esc`** to step back out.
+   - **Click a file** to view its contents.
+   - **Drag** nodes, **scroll** to zoom, **drag the canvas** to pan.
 
-## Development
+## Scripts
 
-### Available Scripts
+- `npm run dev` — start the Vite dev server
+- `npm run build` — type-check (`tsc -b`) and build for production
+- `npm run type-check` — type-check only, no emit
+- `npm run lint` — run ESLint
+- `npm run preview` — preview the production build
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript type checking
+## Status & Known Limitations
 
-### Code Style
+Early-stage; see [`docs/ROADMAP.md`](./docs/ROADMAP.md) for the plan.
 
-This project uses ESLint with TypeScript support. The configuration includes:
-
-- Type-aware lint rules
-- React-specific rules
-- Strict TypeScript checking
-- Stylistic rules
+- On initial load the GitHub service eagerly fetches **every** file's content, which can
+  exhaust API rate limits on large repositories. Lazy, on-demand fetching is planned —
+  see [ADR-0001](./docs/adr/0001-lazy-file-content-fetch.md).
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+This project follows a strict, milestone-based workflow: one milestone = one PR, atomic
+[Conventional Commits](https://www.conventionalcommits.org/), and ADRs for cross-cutting
+decisions. Before opening a PR, read [`docs/WORKING_AGREEMENTS.md`](./docs/WORKING_AGREEMENTS.md)
+and [`docs/PROGRESS.md`](./docs/PROGRESS.md). Every commit must pass
+`npm run lint && npm run build`.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT-licensed.
 
 ## Acknowledgments
 
-- [D3.js](https://d3js.org/) for visualization capabilities
-- [Octokit](https://github.com/octokit/octokit.js) for GitHub API integration
-- [Vite](https://vitejs.dev/) for the build tooling
+- [D3.js](https://d3js.org/) for the visualization
+- [Octokit](https://github.com/octokit/octokit.js) for GitHub API access
+- [Vite](https://vitejs.dev/) for build tooling
 - [Tailwind CSS](https://tailwindcss.com/) for styling
