@@ -23,7 +23,7 @@ class GitHubService {
    * @returns Object containing owner and repo name
    */
   private parseGitHubUrl(url: string): { owner: string; repo: string } {
-    const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    const match = url.match(/github\.com\/([^/]+)\/([^/]+)/);
     if (!match) {
       throw new Error('Invalid GitHub URL');
     }
@@ -158,8 +158,9 @@ class GitHubService {
       );
 
       return nodes;
-    } catch (error: any) {
-      if (error.status === 403 && error.message.includes('rate limit')) {
+    } catch (error) {
+      const err = error as { status?: number; message?: string };
+      if (err.status === 403 && err.message?.includes('rate limit')) {
         throw new Error(
           'GitHub API rate limit exceeded. Please ensure you have set up your GitHub token in the .env file.'
         );
