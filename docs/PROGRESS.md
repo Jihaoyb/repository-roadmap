@@ -13,18 +13,19 @@ read-first: true
 ## You are here
 
 - **Current phase:** A — Stop the bleeding
-- **Current milestone:** A.1 — Project hygiene
-- **Next milestone after A.1 lands:** A.2 — RepositoryGraph wiring
+- **Current milestone:** A.2 — RepositoryGraph wiring
+- **Next milestone after A.2 lands:** A.3 — URL and content correctness
 
 ## Recently completed
 
 | Milestone | PR | Landed |
 |---|---|---|
+| A.1 — Project hygiene | [#3](https://github.com/Jihaoyb/repository-roadmap/pull/3) | 2026-05-28 |
 | A.0 — Planning foundation | [#2](https://github.com/Jihaoyb/repository-roadmap/pull/2) | 2026-05-25 |
 
 ## Next action
 
-**A.1 — Project hygiene** is in flight on branch `chore/a1-project-hygiene` (PR #3): green the pre-existing red build, fix stale metadata (`index.html` title, Tailwind v4 in `src/index.css`, `.env.example`, a `type-check` script), and rewrite the README to match reality. See [ROADMAP.md § Phase A.1](./ROADMAP.md#a1--project-hygiene).
+**A.2 — RepositoryGraph wiring** is next — see [ROADMAP.md § Phase A.2](./ROADMAP.md#a2--repositorygraph-wiring). Note: A.1's build green-up already removed the dead props plumbing and the stale `RepositoryGraphProps` interface (resolving bug 2 and making `RepositoryGraph` store-driven), so A.2 should be re-scoped to the remaining wiring — feed `graphConfig` from the store (graph dimensions are hardcoded today), set the selected node on file-node click (bug 9), and fix the breadcrumb parent name (bug 3).
 
 ## Open questions
 
