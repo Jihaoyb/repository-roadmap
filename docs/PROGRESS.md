@@ -2,7 +2,7 @@
 title: Progress
 status: living
 audience: all
-updated: 2026-05-23
+updated: 2026-05-28
 read-first: true
 ---
 
@@ -13,18 +13,18 @@ read-first: true
 ## You are here
 
 - **Current phase:** A — Stop the bleeding
-- **Current milestone:** A.0 — Planning foundation *(in flight as the PR containing this file)*
-- **Next milestone after A.0 lands:** A.1 — Project hygiene
+- **Current milestone:** A.1 — Project hygiene
+- **Next milestone after A.1 lands:** A.2 — RepositoryGraph wiring
 
 ## Recently completed
 
 | Milestone | PR | Landed |
 |---|---|---|
-| *(none yet — A.0 is the first)* | | |
+| A.0 — Planning foundation | [#2](https://github.com/Jihaoyb/repository-roadmap/pull/2) | 2026-05-25 |
 
 ## Next action
 
-Open and merge the PR for **A.0 — Planning foundation** (this branch: `docs/planning-foundation` → `master`). After merge, the next session opens A.1 by reading [ROADMAP.md § Phase A.1](./ROADMAP.md#a1--project-hygiene) and beginning with the first commit in that milestone (`chore: delete src/types/test.ts`).
+**A.1 — Project hygiene** is in flight on branch `chore/a1-project-hygiene` (PR #3): green the pre-existing red build, fix stale metadata (`index.html` title, Tailwind v4 in `src/index.css`, `.env.example`, a `type-check` script), and rewrite the README to match reality. See [ROADMAP.md § Phase A.1](./ROADMAP.md#a1--project-hygiene).
 
 ## Open questions
 
